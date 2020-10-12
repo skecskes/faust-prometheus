@@ -1,0 +1,10 @@
+venv
+*.pyc
+__pycache__
+.DS_Store
+.idea
+*.egg-info
+build
+dist
+.pytest_cache
+*.iml
