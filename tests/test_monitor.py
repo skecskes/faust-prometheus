@@ -24,33 +24,33 @@ class TestPrometheusMonitor:
         pm_config = PrometheusMonitorConfig()
         client = PrometheusMonitor(app, pm_config=pm_config, time=time)
 
-        client.messages_received = Mock(name="counter")
-        client.active_messages = Mock(name="gauge")
-        client.messages_received_per_topics = Mock(name="counter")
-        client.messages_received_per_topics_partition = Mock(name="gauge")
-        client.total_events = Mock(name="counter")
-        client.total_active_events = Mock(name="gauge")
-        client.total_events_per_stream = Mock(name="gauge")
-        client.events_runtime_latency = Mock(name="histogram")
-        client.table_operations = Mock(name="counter")
-        client.consumer_commit_latency = Mock(name="histogram")
-        client.total_sent_messages = Mock(name="counter")
-        client.topic_messages_sent = Mock(name="counter")
-        client.producer_send_latency = Mock(name="histogram")
-        client.total_error_messages_sent = Mock(name="counter")
-        client.producer_error_send_latency = Mock(name="histogram")
-        client.assignment_operations = Mock(name="counter")
-        client.assign_latency = Mock(name="histogram")
-        client.total_rebalances = Mock(name="gauge")
-        client.total_rebalances_recovering = Mock(name="gauge")
-        client.rebalance_done_consumer_latency = Mock(name="histogram")
-        client.rebalance_done_latency = Mock(name="histogram")
-        client.count_metrics_by_name = Mock(name="gauge")
-        client.http_status_codes = Mock(name="counter")
-        client.http_latency = Mock(name="histogram")
-        client.topic_partition_end_offset = Mock(name="gauge")
-        client.topic_partition_offset_commited = Mock(name="gauge")
-        client.consumer_commit_latency = Mock(name="histogram")
+        client._metrics.messages_received = Mock(name="counter")
+        client._metrics.active_messages = Mock(name="gauge")
+        client._metrics.messages_received_per_topics = Mock(name="counter")
+        client._metrics.messages_received_per_topics_partition = Mock(name="gauge")
+        client._metrics.total_events = Mock(name="counter")
+        client._metrics.total_active_events = Mock(name="gauge")
+        client._metrics.total_events_per_stream = Mock(name="gauge")
+        client._metrics.events_runtime_latency = Mock(name="histogram")
+        client._metrics.table_operations = Mock(name="counter")
+        client._metrics.consumer_commit_latency = Mock(name="histogram")
+        client._metrics.total_sent_messages = Mock(name="counter")
+        client._metrics.topic_messages_sent = Mock(name="counter")
+        client._metrics.producer_send_latency = Mock(name="histogram")
+        client._metrics.total_error_messages_sent = Mock(name="counter")
+        client._metrics.producer_error_send_latency = Mock(name="histogram")
+        client._metrics.assignment_operations = Mock(name="counter")
+        client._metrics.assign_latency = Mock(name="histogram")
+        client._metrics.total_rebalances = Mock(name="gauge")
+        client._metrics.total_rebalances_recovering = Mock(name="gauge")
+        client._metrics.rebalance_done_consumer_latency = Mock(name="histogram")
+        client._metrics.rebalance_done_latency = Mock(name="histogram")
+        client._metrics.count_metrics_by_name = Mock(name="gauge")
+        client._metrics.http_status_codes = Mock(name="counter")
+        client._metrics.http_latency = Mock(name="histogram")
+        client._metrics.topic_partition_end_offset = Mock(name="gauge")
+        client._metrics.topic_partition_offset_commited = Mock(name="gauge")
+        client._metrics.consumer_commit_latency = Mock(name="histogram")
 
         return client
 
@@ -90,31 +90,31 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         client.on_message_in(TP1, 400, message)
 
-        client.messages_received.inc.assert_called_once()
-        client.active_messages.inc.assert_called_once()
-        client.messages_received_per_topics.labels.assert_called_once_with(
+        client._metrics.messages_received.inc.assert_called_once()
+        client._metrics.active_messages.inc.assert_called_once()
+        client._metrics.messages_received_per_topics.labels.assert_called_once_with(
             topic='foo')
 
-        labels = client.messages_received_per_topics_partition.labels
+        labels = client._metrics.messages_received_per_topics_partition.labels
         labels.assert_called_once_with(topic='foo', partition=3)
         labels(topic='foo', partition=3).set.assert_called_once_with(400)
 
         client.on_message_out(TP1, 400, message)
-        client.active_messages.dec.assert_called_once()
+        client._metrics.active_messages.dec.assert_called_once()
 
     def test_on_stream_event_in_out(self, *, stream, event):
         client = self.prometheus_client()
         state = client.on_stream_event_in(TP1, 401, stream, event)
 
-        client.total_events.inc.assert_called_once()
-        client.total_active_events.inc.assert_called_once()
-        client.total_events_per_stream.labels.assert_called_once_with(
+        client._metrics.total_events.inc.assert_called_once()
+        client._metrics.total_active_events.inc.assert_called_once()
+        client._metrics.total_events_per_stream.labels.assert_called_once_with(
             stream='stream.topic_foo.events'
         )
 
         client.on_stream_event_out(TP1, 401, stream, event, state)
-        client.total_active_events.dec.assert_called_once()
-        client.events_runtime_latency.observe.assert_called_once_with(
+        client._metrics.total_active_events.dec.assert_called_once()
+        client._metrics.events_runtime_latency.observe.assert_called_once_with(
             client.secs_to_ms(client.events_runtime[-1])
         )
 
@@ -122,10 +122,10 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         client.on_table_get(table, 'key')
 
-        client.table_operations.labels.assert_called_once_with(
+        client._metrics.table_operations.labels.assert_called_once_with(
             table='table.table1', operation='keys_retrieved'
         )
-        client.table_operations.labels(
+        client._metrics.table_operations.labels(
             table='table.table1', operation='keys_retrieved'
         ).inc.assert_called_once()
 
@@ -133,10 +133,10 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         client.on_table_set(table, 'key', 'value')
 
-        client.table_operations.labels.assert_called_once_with(
+        client._metrics.table_operations.labels.assert_called_once_with(
             table='table.table1', operation='keys_updated'
         )
-        client.table_operations.labels(
+        client._metrics.table_operations.labels(
             table='table.table1', operation='keys_updated'
         ).inc.assert_called_once()
 
@@ -144,10 +144,10 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         client.on_table_del(table, 'key')
 
-        client.table_operations.labels.assert_called_once_with(
+        client._metrics.table_operations.labels.assert_called_once_with(
             table='table.table1', operation='keys_deleted'
         )
-        client.table_operations.labels(
+        client._metrics.table_operations.labels(
             table='table.table1', operation='keys_deleted'
         ).inc.assert_called_once()
 
@@ -157,7 +157,7 @@ class TestPrometheusMonitor:
         state = client.on_commit_initiated(consumer)
         client.on_commit_completed(consumer, state)
 
-        client.consumer_commit_latency.observe.assert_called_once_with(
+        client._metrics.consumer_commit_latency.observe.assert_called_once_with(
             client.ms_since(float(state)))
 
     def test_on_send_initiated_completed(self):
@@ -168,19 +168,19 @@ class TestPrometheusMonitor:
 
         client.on_send_completed(producer, state, Mock(name='metadata'))
 
-        client.total_sent_messages.inc.assert_called_once()
-        client.topic_messages_sent.labels.assert_called_once_with(
+        client._metrics.total_sent_messages.inc.assert_called_once()
+        client._metrics.topic_messages_sent.labels.assert_called_once_with(
             topic='topic.topic1')
-        client.topic_messages_sent.labels(
+        client._metrics.topic_messages_sent.labels(
             topic='topic.topic1').inc.assert_called_once()
 
-        client.producer_send_latency.observe.assert_called_once_with(
+        client._metrics.producer_send_latency.observe.assert_called_once_with(
             client.ms_since(float(state)))
 
         client.on_send_error(producer, KeyError('foo'), state)
 
-        client.total_error_messages_sent.inc.assert_called()
-        client.producer_error_send_latency.observe.assert_called_with(
+        client._metrics.total_error_messages_sent.inc.assert_called()
+        client._metrics.producer_error_send_latency.observe.assert_called_with(
             client.ms_since(float(state)))
 
     def test_on_assignment_start_completed(self):
@@ -189,11 +189,11 @@ class TestPrometheusMonitor:
         state = client.on_assignment_start(assignor)
         client.on_assignment_completed(assignor, state)
 
-        client.assignment_operations.labels.assert_called_once_with(
+        client._metrics.assignment_operations.labels.assert_called_once_with(
             operation=client.COMPLETED)
-        client.assignment_operations.labels(
+        client._metrics.assignment_operations.labels(
             operation=client.COMPLETED).inc.assert_called_once()
-        client.assign_latency.observe.assert_called_once_with(
+        client._metrics.assign_latency.observe.assert_called_once_with(
             client.ms_since(state['time_start']))
 
     def test_on_assignment_start_failed(self):
@@ -202,11 +202,11 @@ class TestPrometheusMonitor:
         state = client.on_assignment_start(assignor)
         client.on_assignment_error(assignor, state, KeyError())
 
-        client.assignment_operations.labels.assert_called_once_with(
+        client._metrics.assignment_operations.labels.assert_called_once_with(
             operation=client.ERROR)
-        client.assignment_operations.labels(
+        client._metrics.assignment_operations.labels(
             operation=client.ERROR).inc.assert_called_once()
-        client.assign_latency.observe.assert_called_once_with(
+        client._metrics.assign_latency.observe.assert_called_once_with(
             client.ms_since(state['time_start']))
 
     def test_on_rebalance(self):
@@ -214,17 +214,17 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
 
         state = client.on_rebalance_start(app)
-        client.total_rebalances.inc.assert_called_once()
+        client._metrics.total_rebalances.inc.assert_called_once()
 
         client.on_rebalance_return(app, state)
-        client.total_rebalances.dec.assert_called_once()
-        client.total_rebalances_recovering.inc.assert_called()
-        client.rebalance_done_consumer_latency.observe.assert_called_once_with(
+        client._metrics.total_rebalances.dec.assert_called_once()
+        client._metrics.total_rebalances_recovering.inc.assert_called()
+        client._metrics.rebalance_done_consumer_latency.observe.assert_called_once_with(
             client.ms_since(state['time_return']))
 
         client.on_rebalance_end(app, state)
-        client.total_rebalances_recovering.dec.assert_called()
-        client.rebalance_done_latency.observe(
+        client._metrics.total_rebalances_recovering.dec.assert_called()
+        client._metrics.rebalance_done_latency.observe(
             client.ms_since(state['time_end']))
 
     def test_on_web_request(self, request, response, view):
@@ -242,20 +242,20 @@ class TestPrometheusMonitor:
         state = client.on_web_request_start(app, request, view=view)
         client.on_web_request_end(app, request, response, state, view=view)
 
-        client.http_status_codes.labels.assert_called_with(
+        client._metrics.http_status_codes.labels.assert_called_with(
             status_code=expected_status)
-        client.http_status_codes.labels(
+        client._metrics.http_status_codes.labels(
             status_code=expected_status).inc.assert_called()
-        client.http_latency.observe.assert_called_with(
+        client._metrics.http_latency.observe.assert_called_with(
             client.ms_since(state['time_end']))
 
     def test_count(self):
         client = self.prometheus_client()
         client.count('metric_name', count=3)
 
-        client.count_metrics_by_name.labels.assert_called_once_with(
+        client._metrics.count_metrics_by_name.labels.assert_called_once_with(
             metric='metric_name')
-        client.count_metrics_by_name.labels(
+        client._metrics.count_metrics_by_name.labels(
             metric='metric_name').inc.assert_called_once_with(3)
 
     def test_on_tp_commit(self):
@@ -267,7 +267,7 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
 
         client.on_tp_commit(offsets)
-        client.topic_partition_offset_commited.labels.assert_has_calls([
+        client._metrics.topic_partition_offset_commited.labels.assert_has_calls([
             call(topic='foo', partition=0),
             call().set(1001),
             call(topic='foo', partition=1),
@@ -280,7 +280,7 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         client.track_tp_end_offset(TP('foo', 0), 4004)
 
-        client.topic_partition_end_offset.labels.assert_called_once_with(
+        client._metrics.topic_partition_end_offset.labels.assert_called_once_with(
             topic='foo', partition=0)
-        client.topic_partition_end_offset.labels(
+        client._metrics.topic_partition_end_offset.labels(
             topic='foo', partition=0).set.assert_called_once_with(4004)

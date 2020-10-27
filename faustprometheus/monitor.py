@@ -4,6 +4,7 @@ import re
 from contextlib import suppress
 from typing import Mapping
 from faustprometheus.config import PrometheusMonitorConfig
+from faustprometheus.metrics import PrometheusMetrics
 
 from aiohttp.web import Response
 
@@ -66,7 +67,7 @@ class PrometheusMonitor(Monitor):
                 'prometheus_client requires `pip install prometheus_client`.')
 
         self._python_gc_metrics()
-        self._initialize_metrics()
+        self._metrics = PrometheusMetrics(self.pm_config)
         self.expose_metrics()
         super().__init__(**kwargs)
 
@@ -78,211 +79,23 @@ class PrometheusMonitor(Monitor):
             with suppress(KeyError):
                 REGISTRY.unregister(name)
 
-    def _initialize_metrics(self) -> None:
-        """
-        Initialize Prometheus metrics
-        """
-        # On message received
-        self.messages_received = Counter(
-            'messages_received',
-            'Total messages received',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.active_messages = Gauge(
-            'active_messages',
-            'Total active messages',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.messages_received_per_topics = Counter(
-            'messages_received_per_topic',
-            'Messages received per topic',
-            ['topic'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.messages_received_per_topics_partition = Gauge(
-            'messages_received_per_topics_partition',
-            'Messages received per topic/partition',
-            ['topic', 'partition'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.events_runtime_latency = Histogram(
-            'events_runtime_ms',
-            'Events runtime in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # On Event Stream in
-        self.total_events = Counter(
-            'total_events',
-            'Total events received',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.total_active_events = Gauge(
-            'total_active_events',
-            'Total active events',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.total_events_per_stream = Counter(
-            'total_events_per_stream',
-            'Events received per Stream',
-            ['stream'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # On table changes get/set/del keys
-        self.table_operations = Counter(
-            'table_operations',
-            'Total table operations',
-            ['table', 'operation'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # On message send
-        self.topic_messages_sent = Counter(
-            'topic_messages_sent',
-            'Total messages sent per topic',
-            ['topic'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.total_sent_messages = Counter(
-            'total_sent_messages',
-            'Total messages sent',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.producer_send_latency = Histogram(
-            'producer_send_latency',
-            'Producer send latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.total_error_messages_sent = Counter(
-            'total_error_messages_sent',
-            'Total error messages sent',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.producer_error_send_latency = Histogram(
-            'producer_error_send_latency',
-            'Producer error send latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # Assignment
-        self.assignment_operations = Counter(
-            'assignment_operations',
-            'Total assigment operations (completed/error)',
-            ['operation'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.assign_latency = Histogram(
-            'assign_latency',
-            'Assignment latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # Rebalances
-        self.total_rebalances = Gauge(
-            'total_rebalances',
-            'Total rebalances',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.total_rebalances_recovering = Gauge(
-            'total_rebalances_recovering',
-            'Total rebalances recovering',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.rebalance_done_consumer_latency = Histogram(
-            'rebalance_done_consumer_latency',
-            'Consumer replying that rebalance is done to broker in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.rebalance_done_latency = Histogram(
-            'rebalance_done_latency',
-            'Rebalance finished latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # Count Metrics by name
-        self.count_metrics_by_name = Gauge(
-            'metrics_by_name',
-            'Total metrics by name',
-            ['metric'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # Web
-        self.http_status_codes = Counter(
-            'http_status_codes',
-            'Total http_status code',
-            ['status_code'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.http_latency = Histogram(
-            'http_latency',
-            'Http response latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
-        # Topic/Partition Offsets
-        self.topic_partition_end_offset = Gauge(
-            'topic_partition_end_offset',
-            'Offset ends per topic/partition',
-            ['topic', 'partition'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.topic_partition_offset_commited = Gauge(
-            'topic_partition_offset_commited',
-            'Offset commited per topic/partition',
-            ['topic', 'partition'],
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-        self.consumer_commit_latency = Histogram(
-            'consumer_commit_latency',
-            'Consumer commit latency in ms',
-            namespace=self.pm_config.namespace,
-            subsystem=self.pm_config.subsystem
-        )
-
     def on_message_in(self, tp: TP, offset: int, message: Message) -> None:
         """Call before message is delegated to streams."""
         super().on_message_in(tp, offset, message)
 
-        self.messages_received.inc()
-        self.active_messages.inc()
-        self.messages_received_per_topics.labels(topic=tp.topic).inc()
-        self.messages_received_per_topics_partition.labels(
+        self._metrics.messages_received.inc()
+        self._metrics.active_messages.inc()
+        self._metrics.messages_received_per_topics.labels(topic=tp.topic).inc()
+        self._metrics.messages_received_per_topics_partition.labels(
             topic=tp.topic, partition=tp.partition).set(offset)
 
     def on_stream_event_in(self, tp: TP, offset: int, stream: StreamT,
                            event: EventT) -> typing.Optional[typing.Dict]:
         """Call when stream starts processing an event."""
         state = super().on_stream_event_in(tp, offset, stream, event)
-        self.total_events.inc()
-        self.total_active_events.inc()
-        self.total_events_per_stream.labels(
+        self._metrics.total_events.inc()
+        self._metrics.total_active_events.inc()
+        self._metrics.total_events_per_stream.labels(
             stream=f'stream.{self._stream_label(stream)}.events').inc()
 
         return state
@@ -302,8 +115,8 @@ class PrometheusMonitor(Monitor):
                             event: EventT, state: typing.Dict = None) -> None:
         """Call when stream is done processing an event."""
         super().on_stream_event_out(tp, offset, stream, event, state)
-        self.total_active_events.dec()
-        self.events_runtime_latency.observe(
+        self._metrics.total_active_events.dec()
+        self._metrics.events_runtime_latency.observe(
             self.secs_to_ms(self.events_runtime[-1]))
 
     def on_message_out(self,
@@ -312,12 +125,12 @@ class PrometheusMonitor(Monitor):
                        message: Message) -> None:
         """Call when message is fully acknowledged and can be committed."""
         super().on_message_out(tp, offset, message)
-        self.active_messages.dec()
+        self._metrics.active_messages.dec()
 
     def on_table_get(self, table: CollectionT, key: typing.Any) -> None:
         """Call when value in table is retrieved."""
         super().on_table_get(table, key)
-        self.table_operations.labels(
+        self._metrics.table_operations.labels(
             table=f'table.{table.name}',
             operation=self.KEYS_RETRIEVED).inc()
 
@@ -325,14 +138,14 @@ class PrometheusMonitor(Monitor):
                      value: typing.Any) -> None:
         """Call when new value for key in table is set."""
         super().on_table_set(table, key, value)
-        self.table_operations.labels(
+        self._metrics.table_operations.labels(
             table=f'table.{table.name}',
             operation=self.KEYS_UPDATED).inc()
 
     def on_table_del(self, table: CollectionT, key: typing.Any) -> None:
         """Call when key in a table is deleted."""
         super().on_table_del(table, key)
-        self.table_operations.labels(
+        self._metrics.table_operations.labels(
             table=f'table.{table.name}',
             operation=self.KEYS_DELETED).inc()
 
@@ -340,14 +153,14 @@ class PrometheusMonitor(Monitor):
                             state: typing.Any) -> None:
         """Call when consumer commit offset operation completed."""
         super().on_commit_completed(consumer, state)
-        self.consumer_commit_latency.observe(
+        self._metrics.consumer_commit_latency.observe(
             self.ms_since(typing.cast(float, state)))
 
     def on_send_initiated(self, producer: ProducerT, topic: str,
                           message: PendingMessage,
                           keysize: int, valsize: int) -> typing.Any:
         """Call when message added to producer buffer."""
-        self.topic_messages_sent.labels(topic=f'topic.{topic}').inc()
+        self._metrics.topic_messages_sent.labels(topic=f'topic.{topic}').inc()
 
         return super().on_send_initiated(
             producer, topic, message, keysize, valsize)
@@ -358,8 +171,8 @@ class PrometheusMonitor(Monitor):
                           metadata: RecordMetadata) -> None:
         """Call when producer finished sending message."""
         super().on_send_completed(producer, state, metadata)
-        self.total_sent_messages.inc()
-        self.producer_send_latency.observe(
+        self._metrics.total_sent_messages.inc()
+        self._metrics.producer_send_latency.observe(
             self.ms_since(typing.cast(float, state)))
 
     def on_send_error(self,
@@ -368,8 +181,8 @@ class PrometheusMonitor(Monitor):
                       state: typing.Any) -> None:
         """Call when producer was unable to publish message."""
         super().on_send_error(producer, exc, state)
-        self.total_error_messages_sent.inc()
-        self.producer_error_send_latency.observe(
+        self._metrics.total_error_messages_sent.inc()
+        self._metrics.producer_error_send_latency.observe(
             self.ms_since(typing.cast(float, state)))
 
     def on_assignment_error(self,
@@ -378,57 +191,57 @@ class PrometheusMonitor(Monitor):
                             exc: BaseException) -> None:
         """Partition assignor did not complete assignor due to error."""
         super().on_assignment_error(assignor, state, exc)
-        self.assignment_operations.labels(operation=self.ERROR).inc()
-        self.assign_latency.observe(
+        self._metrics.assignment_operations.labels(operation=self.ERROR).inc()
+        self._metrics.assign_latency.observe(
             self.ms_since(state['time_start']))
 
     def on_assignment_completed(self,
                                 assignor: PartitionAssignorT,
-                                state: typing. Dict) -> None:
+                                state: typing.Dict) -> None:
         """Partition assignor completed assignment."""
         super().on_assignment_completed(assignor, state)
-        self.assignment_operations.labels(operation=self.COMPLETED).inc()
-        self.assign_latency.observe(
+        self._metrics.assignment_operations.labels(operation=self.COMPLETED).inc()
+        self._metrics.assign_latency.observe(
             self.ms_since(state['time_start']))
 
     def on_rebalance_start(self, app: AppT) -> typing.Dict:
         """Cluster rebalance in progress."""
         state = super().on_rebalance_start(app)
-        self.total_rebalances.inc()
+        self._metrics.total_rebalances.inc()
 
         return state
 
     def on_rebalance_return(self, app: AppT, state: typing.Dict) -> None:
         """Consumer replied assignment is done to broker."""
         super().on_rebalance_return(app, state)
-        self.total_rebalances.dec()
-        self.total_rebalances_recovering.inc()
-        self.rebalance_done_consumer_latency.observe(
+        self._metrics.total_rebalances.dec()
+        self._metrics.total_rebalances_recovering.inc()
+        self._metrics.rebalance_done_consumer_latency.observe(
             self.ms_since(state['time_return']))
 
     def on_rebalance_end(self, app: AppT, state: typing.Dict) -> None:
         """Cluster rebalance fully completed (including recovery)."""
         super().on_rebalance_end(app, state)
-        self.total_rebalances_recovering.dec()
-        self.rebalance_done_latency.observe(
+        self._metrics.total_rebalances_recovering.dec()
+        self._metrics.rebalance_done_latency.observe(
             self.ms_since(state['time_end']))
 
     def count(self, metric_name: str, count: int = 1) -> None:
         """Count metric by name."""
         super().count(metric_name, count=count)
-        self.count_metrics_by_name.labels(metric=metric_name).inc(count)
+        self._metrics.count_metrics_by_name.labels(metric=metric_name).inc(count)
 
     def on_tp_commit(self, tp_offsets: TPOffsetMapping) -> None:
         """Call when offset in topic partition is committed."""
         super().on_tp_commit(tp_offsets)
         for tp, offset in tp_offsets.items():
-            self.topic_partition_offset_commited.labels(
+            self._metrics.topic_partition_offset_commited.labels(
                 topic=tp.topic, partition=tp.partition).set(offset)
 
     def track_tp_end_offset(self, tp: TP, offset: int) -> None:
         """Track new topic partition end offset for monitoring lags."""
         super().track_tp_end_offset(tp, offset)
-        self.topic_partition_end_offset.labels(
+        self._metrics.topic_partition_end_offset.labels(
             topic=tp.topic, partition=tp.partition).set(offset)
 
     def on_web_request_end(self,
@@ -441,12 +254,13 @@ class PrometheusMonitor(Monitor):
         """Web server finished working on request."""
         super().on_web_request_end(app, request, response, state, view=view)
         status_code = int(state['status_code'])
-        self.http_status_codes.labels(status_code=status_code).inc()
-        self.http_latency.observe(
+        self._metrics.http_status_codes.labels(status_code=status_code).inc()
+        self._metrics.http_latency.observe(
             self.ms_since(state['time_end']))
 
     def expose_metrics(self) -> None:
         """Expose prometheus metrics using the current aiohttp application."""
+
         @self.app.page(self.pm_config.path)
         async def metrics_handler(self, request):
             headers = {
