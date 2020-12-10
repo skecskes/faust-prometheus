@@ -8,13 +8,13 @@ with open("README.md", "r") as fh:
 
 setup(
     name='faustprometheus',
-    version="0.0.1",
+    version="0.0.2",
     author='Wood Mackenzie',
     author_email='stefan.kecskes@woodmac.com',
-    description='WoodMac Faust Prometheus Library',
+    description="WoodMac's Faust Prometheus Library",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/wood-mackenzie/faustprometheus",
+    url="https://github.com/woodmac/faust-prometheus",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
