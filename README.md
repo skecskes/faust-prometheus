@@ -33,7 +33,7 @@ I added labels to config, but are not applied to monitor due to lack of my under
         monitor_config = PrometheusMonitorConfig(
             path='/metrics',
             namespace='faust',
-            subystem='foo-app',
+            subsystem='foo-app',
             labels=['v2.3', 'prod']
             )        
             
