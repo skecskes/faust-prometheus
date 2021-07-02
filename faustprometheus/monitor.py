@@ -30,7 +30,7 @@ try:
 except ImportError:  # pragma: no cover
     prometheus_client = None
 
-RE_NORMALIZE = re.compile(r'[\<\>:\s]+')
+RE_NORMALIZE = re.compile(r'[<>:\s]+')
 RE_NORMALIZE_SUBSTITUTION = '_'
 
 
@@ -117,7 +117,7 @@ class PrometheusMonitor(Monitor):
         super().on_stream_event_out(tp, offset, stream, event, state)
         self._metrics.total_active_events.dec()
         self._metrics.events_runtime_latency.observe(
-            self.secs_to_ms(self.events_runtime[-1]))
+            self.events_runtime[-1])
 
     def on_message_out(self,
                        tp: TP,
@@ -154,7 +154,7 @@ class PrometheusMonitor(Monitor):
         """Call when consumer commit offset operation completed."""
         super().on_commit_completed(consumer, state)
         self._metrics.consumer_commit_latency.observe(
-            self.ms_since(typing.cast(float, state)))
+            self.secs_since(typing.cast(float, state)))
 
     def on_send_initiated(self, producer: ProducerT, topic: str,
                           message: PendingMessage,
@@ -173,7 +173,7 @@ class PrometheusMonitor(Monitor):
         super().on_send_completed(producer, state, metadata)
         self._metrics.total_sent_messages.inc()
         self._metrics.producer_send_latency.observe(
-            self.ms_since(typing.cast(float, state)))
+            self.secs_since(typing.cast(float, state)))
 
     def on_send_error(self,
                       producer: ProducerT,
@@ -183,7 +183,7 @@ class PrometheusMonitor(Monitor):
         super().on_send_error(producer, exc, state)
         self._metrics.total_error_messages_sent.inc()
         self._metrics.producer_error_send_latency.observe(
-            self.ms_since(typing.cast(float, state)))
+            self.secs_since(typing.cast(float, state)))
 
     def on_assignment_error(self,
                             assignor: PartitionAssignorT,
@@ -193,7 +193,7 @@ class PrometheusMonitor(Monitor):
         super().on_assignment_error(assignor, state, exc)
         self._metrics.assignment_operations.labels(operation=self.ERROR).inc()
         self._metrics.assign_latency.observe(
-            self.ms_since(state['time_start']))
+            self.secs_since(state['time_start']))
 
     def on_assignment_completed(self,
                                 assignor: PartitionAssignorT,
@@ -202,7 +202,7 @@ class PrometheusMonitor(Monitor):
         super().on_assignment_completed(assignor, state)
         self._metrics.assignment_operations.labels(operation=self.COMPLETED).inc()
         self._metrics.assign_latency.observe(
-            self.ms_since(state['time_start']))
+            self.secs_since(state['time_start']))
 
     def on_rebalance_start(self, app: AppT) -> typing.Dict:
         """Cluster rebalance in progress."""
@@ -217,14 +217,14 @@ class PrometheusMonitor(Monitor):
         self._metrics.total_rebalances.dec()
         self._metrics.total_rebalances_recovering.inc()
         self._metrics.rebalance_done_consumer_latency.observe(
-            self.ms_since(state['time_return']))
+            self.secs_since(state['time_return']))
 
     def on_rebalance_end(self, app: AppT, state: typing.Dict) -> None:
         """Cluster rebalance fully completed (including recovery)."""
         super().on_rebalance_end(app, state)
         self._metrics.total_rebalances_recovering.dec()
         self._metrics.rebalance_done_latency.observe(
-            self.ms_since(state['time_end']))
+            self.secs_since(state['time_end']))
 
     def count(self, metric_name: str, count: int = 1) -> None:
         """Count metric by name."""
@@ -256,7 +256,7 @@ class PrometheusMonitor(Monitor):
         status_code = int(state['status_code'])
         self._metrics.http_status_codes.labels(status_code=status_code).inc()
         self._metrics.http_latency.observe(
-            self.ms_since(state['time_end']))
+            self.secs_since(state['time_end']))
 
     def expose_metrics(self) -> None:
         """Expose prometheus metrics using the current aiohttp application."""
