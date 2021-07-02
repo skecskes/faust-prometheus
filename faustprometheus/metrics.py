@@ -36,8 +36,8 @@ class PrometheusMetrics:
             subsystem=pm_config.subsystem
         )
         self.events_runtime_latency = Histogram(
-            'events_runtime_ms',
-            'Events runtime in ms',
+            'events_runtime_s',
+            'Events runtime in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -88,7 +88,7 @@ class PrometheusMetrics:
         )
         self.producer_send_latency = Histogram(
             'producer_send_latency',
-            'Producer send latency in ms',
+            'Producer send latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -100,7 +100,7 @@ class PrometheusMetrics:
         )
         self.producer_error_send_latency = Histogram(
             'producer_error_send_latency',
-            'Producer error send latency in ms',
+            'Producer error send latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -115,7 +115,7 @@ class PrometheusMetrics:
         )
         self.assign_latency = Histogram(
             'assign_latency',
-            'Assignment latency in ms',
+            'Assignment latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -135,13 +135,13 @@ class PrometheusMetrics:
         )
         self.rebalance_done_consumer_latency = Histogram(
             'rebalance_done_consumer_latency',
-            'Consumer replying that rebalance is done to broker in ms',
+            'Consumer replying that rebalance is done to broker in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
         self.rebalance_done_latency = Histogram(
             'rebalance_done_latency',
-            'Rebalance finished latency in ms',
+            'Rebalance finished latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -165,7 +165,7 @@ class PrometheusMetrics:
         )
         self.http_latency = Histogram(
             'http_latency',
-            'Http response latency in ms',
+            'Http response latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
@@ -187,7 +187,7 @@ class PrometheusMetrics:
         )
         self.consumer_commit_latency = Histogram(
             'consumer_commit_latency',
-            'Consumer commit latency in ms',
+            'Consumer commit latency in seconds',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
