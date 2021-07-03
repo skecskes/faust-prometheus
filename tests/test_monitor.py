@@ -28,21 +28,21 @@ class TestPrometheusMonitor:
         client._metrics.active_messages = Mock(name="gauge")
         client._metrics.messages_received_per_topics = Mock(name="counter")
         client._metrics.messages_received_per_topics_partition = Mock(name="gauge")
-        client._metrics.total_events = Mock(name="counter")
-        client._metrics.total_active_events = Mock(name="gauge")
-        client._metrics.total_events_per_stream = Mock(name="gauge")
+        client._metrics.events_received = Mock(name="counter")
+        client._metrics.active_events = Mock(name="gauge")
+        client._metrics.events_per_stream = Mock(name="gauge")
         client._metrics.events_runtime_latency = Mock(name="histogram")
         client._metrics.table_operations = Mock(name="counter")
         client._metrics.consumer_commit_latency = Mock(name="histogram")
-        client._metrics.total_sent_messages = Mock(name="counter")
+        client._metrics.sent_messages = Mock(name="counter")
         client._metrics.topic_messages_sent = Mock(name="counter")
         client._metrics.producer_send_latency = Mock(name="histogram")
-        client._metrics.total_error_messages_sent = Mock(name="counter")
+        client._metrics.error_messages_sent = Mock(name="counter")
         client._metrics.producer_error_send_latency = Mock(name="histogram")
         client._metrics.assignment_operations = Mock(name="counter")
         client._metrics.assign_latency = Mock(name="histogram")
-        client._metrics.total_rebalances = Mock(name="gauge")
-        client._metrics.total_rebalances_recovering = Mock(name="gauge")
+        client._metrics.rebalances = Mock(name="gauge")
+        client._metrics.rebalances_recovering = Mock(name="gauge")
         client._metrics.rebalance_done_consumer_latency = Mock(name="histogram")
         client._metrics.rebalance_done_latency = Mock(name="histogram")
         client._metrics.count_metrics_by_name = Mock(name="gauge")
@@ -105,14 +105,14 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
         state = client.on_stream_event_in(TP1, 401, stream, event)
 
-        client._metrics.total_events.inc.assert_called_once()
-        client._metrics.total_active_events.inc.assert_called_once()
-        client._metrics.total_events_per_stream.labels.assert_called_once_with(
+        client._metrics.events_received.inc.assert_called_once()
+        client._metrics.active_events.inc.assert_called_once()
+        client._metrics.events_per_stream.labels.assert_called_once_with(
             stream='stream.topic_foo.events'
         )
 
         client.on_stream_event_out(TP1, 401, stream, event, state)
-        client._metrics.total_active_events.dec.assert_called_once()
+        client._metrics.active_events.dec.assert_called_once()
         client._metrics.events_runtime_latency.observe.assert_called_once_with(
             client.events_runtime[-1])
 
@@ -166,7 +166,7 @@ class TestPrometheusMonitor:
 
         client.on_send_completed(producer, state, Mock(name='metadata'))
 
-        client._metrics.total_sent_messages.inc.assert_called_once()
+        client._metrics.sent_messages.inc.assert_called_once()
         client._metrics.topic_messages_sent.labels.assert_called_once_with(
             topic='topic.topic1')
         client._metrics.topic_messages_sent.labels(
@@ -177,7 +177,7 @@ class TestPrometheusMonitor:
 
         client.on_send_error(producer, KeyError('foo'), state)
 
-        client._metrics.total_error_messages_sent.inc.assert_called()
+        client._metrics.error_messages_sent.inc.assert_called()
         client._metrics.producer_error_send_latency.observe.assert_called_with(
             client.secs_since(float(state)))
 
@@ -212,16 +212,16 @@ class TestPrometheusMonitor:
         client = self.prometheus_client()
 
         state = client.on_rebalance_start(app)
-        client._metrics.total_rebalances.inc.assert_called_once()
+        client._metrics.rebalances.inc.assert_called_once()
 
         client.on_rebalance_return(app, state)
-        client._metrics.total_rebalances.dec.assert_called_once()
-        client._metrics.total_rebalances_recovering.inc.assert_called()
+        client._metrics.rebalances.dec.assert_called_once()
+        client._metrics.rebalances_recovering.inc.assert_called()
         client._metrics.rebalance_done_consumer_latency.observe.assert_called_once_with(
             client.secs_since(state['time_return']))
 
         client.on_rebalance_end(app, state)
-        client._metrics.total_rebalances_recovering.dec.assert_called()
+        client._metrics.rebalances_recovering.dec.assert_called()
         client._metrics.rebalance_done_latency.observe(
             client.secs_since(state['time_end']))
 

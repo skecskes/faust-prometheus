@@ -93,9 +93,9 @@ class PrometheusMonitor(Monitor):
                            event: EventT) -> typing.Optional[typing.Dict]:
         """Call when stream starts processing an event."""
         state = super().on_stream_event_in(tp, offset, stream, event)
-        self._metrics.total_events.inc()
-        self._metrics.total_active_events.inc()
-        self._metrics.total_events_per_stream.labels(
+        self._metrics.events_received.inc()
+        self._metrics.active_events.inc()
+        self._metrics.events_per_stream.labels(
             stream=f'stream.{self._stream_label(stream)}.events').inc()
 
         return state
@@ -115,7 +115,7 @@ class PrometheusMonitor(Monitor):
                             event: EventT, state: typing.Dict = None) -> None:
         """Call when stream is done processing an event."""
         super().on_stream_event_out(tp, offset, stream, event, state)
-        self._metrics.total_active_events.dec()
+        self._metrics.active_events.dec()
         self._metrics.events_runtime_latency.observe(
             self.events_runtime[-1])
 
@@ -171,7 +171,7 @@ class PrometheusMonitor(Monitor):
                           metadata: RecordMetadata) -> None:
         """Call when producer finished sending message."""
         super().on_send_completed(producer, state, metadata)
-        self._metrics.total_sent_messages.inc()
+        self._metrics.sent_messages.inc()
         self._metrics.producer_send_latency.observe(
             self.secs_since(typing.cast(float, state)))
 
@@ -181,7 +181,7 @@ class PrometheusMonitor(Monitor):
                       state: typing.Any) -> None:
         """Call when producer was unable to publish message."""
         super().on_send_error(producer, exc, state)
-        self._metrics.total_error_messages_sent.inc()
+        self._metrics.error_messages_sent.inc()
         self._metrics.producer_error_send_latency.observe(
             self.secs_since(typing.cast(float, state)))
 
@@ -207,22 +207,22 @@ class PrometheusMonitor(Monitor):
     def on_rebalance_start(self, app: AppT) -> typing.Dict:
         """Cluster rebalance in progress."""
         state = super().on_rebalance_start(app)
-        self._metrics.total_rebalances.inc()
+        self._metrics.rebalances.inc()
 
         return state
 
     def on_rebalance_return(self, app: AppT, state: typing.Dict) -> None:
         """Consumer replied assignment is done to broker."""
         super().on_rebalance_return(app, state)
-        self._metrics.total_rebalances.dec()
-        self._metrics.total_rebalances_recovering.inc()
+        self._metrics.rebalances.dec()
+        self._metrics.rebalances_recovering.inc()
         self._metrics.rebalance_done_consumer_latency.observe(
             self.secs_since(state['time_return']))
 
     def on_rebalance_end(self, app: AppT, state: typing.Dict) -> None:
         """Cluster rebalance fully completed (including recovery)."""
         super().on_rebalance_end(app, state)
-        self._metrics.total_rebalances_recovering.dec()
+        self._metrics.rebalances_recovering.dec()
         self._metrics.rebalance_done_latency.observe(
             self.secs_since(state['time_end']))
 

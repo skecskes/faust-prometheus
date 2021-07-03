@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='faustprometheus',
-    version="0.0.4",
+    version="0.0.5",
     author='Wood Mackenzie',
     author_email='stefan.kecskes@woodmac.com',
     description="WoodMac's Faust Prometheus Library",
