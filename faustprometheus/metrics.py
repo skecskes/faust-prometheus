@@ -43,20 +43,20 @@ class PrometheusMetrics:
         )
 
         # On Event Stream in
-        self.total_events = Counter(
-            'total_events',
+        self.events_received = Counter(
+            'events_received',
             'Total events received',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
-        self.total_active_events = Gauge(
-            'total_active_events',
+        self.active_events = Gauge(
+            'active_events',
             'Total active events',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
-        self.total_events_per_stream = Counter(
-            'total_events_per_stream',
+        self.events_per_stream = Counter(
+            'events_per_stream',
             'Events received per Stream',
             ['stream'],
             namespace=pm_config.namespace,
@@ -80,8 +80,8 @@ class PrometheusMetrics:
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
-        self.total_sent_messages = Counter(
-            'total_sent_messages',
+        self.sent_messages = Counter(
+            'sent_messages',
             'Total messages sent',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
@@ -92,8 +92,8 @@ class PrometheusMetrics:
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
-        self.total_error_messages_sent = Counter(
-            'total_error_messages_sent',
+        self.error_messages_sent = Counter(
+            'error_messages_sent',
             'Total error messages sent',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
@@ -121,14 +121,14 @@ class PrometheusMetrics:
         )
 
         # Rebalances
-        self.total_rebalances = Gauge(
-            'total_rebalances',
+        self.rebalances = Gauge(
+            'rebalances',
             'Total rebalances',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
         )
-        self.total_rebalances_recovering = Gauge(
-            'total_rebalances_recovering',
+        self.rebalances_recovering = Gauge(
+            'rebalances_recovering',
             'Total rebalances recovering',
             namespace=pm_config.namespace,
             subsystem=pm_config.subsystem
