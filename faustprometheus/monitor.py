@@ -58,7 +58,7 @@ class PrometheusMonitor(Monitor):
     def __init__(self, app: AppT, pm_config: PrometheusMonitorConfig = None, **kwargs) -> None:
         self.app = app
         if pm_config is None:
-            self.pm_config = PrometheusMonitorConfig
+            self.pm_config = PrometheusMonitorConfig()
         else:
             self.pm_config = pm_config
 
@@ -116,8 +116,10 @@ class PrometheusMonitor(Monitor):
         """Call when stream is done processing an event."""
         super().on_stream_event_out(tp, offset, stream, event, state)
         self._metrics.active_events.dec()
-        self._metrics.events_runtime_latency.observe(
-            self.events_runtime[-1])
+
+        if len(self.events_runtime) > 0:
+            self._metrics.events_runtime_latency.observe(
+                self.events_runtime[-1])
 
     def on_message_out(self,
                        tp: TP,
