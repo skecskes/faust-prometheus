@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as fp:
+with open("requirements.txt", "r") as fp:
     install_requires = fp.read()
 
 with open("README.md", "r") as fh:
@@ -10,7 +10,7 @@ setup(
     name='faustprometheus',
     version="0.0.5",
     author='Wood Mackenzie',
-    author_email='stefan.kecskes@woodmac.com',
+    author_email='mr.kecskes@gmail.com',
     description="WoodMac's Faust Prometheus Library",
     long_description=long_description,
     long_description_content_type="text/markdown",
