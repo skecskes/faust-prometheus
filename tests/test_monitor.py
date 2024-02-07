@@ -13,10 +13,11 @@ TP1 = TP('foo', 3)
 
 class TestPrometheusMonitor:
 
-    def time(self):
-        timefun = Mock(name='time()')
-        timefun.return_value = 101.1
-        return timefun
+    @staticmethod
+    def time():
+        time_fun = Mock(name='time()')
+        time_fun.return_value = 101.1
+        return time_fun
 
     @patch.object(PrometheusMonitor, 'expose_metrics')
     def prometheus_client(self, app, time=None):

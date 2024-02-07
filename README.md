@@ -1,14 +1,15 @@
 # Faust Prometheus
 
-This library uses sensors of Faust. Those sensors are events based. Our monitor implements that interface and hooks some actions when those events happen. That allows us to create our own prometheus `Counters`, `Gauges` and `Histograms`.
+This library uses sensors of Faust. Those sensors are events based. Our monitor implements that interface and hooks some
+actions when those events happen. That allows us to create our own prometheus `Counters`, `Gauges` and `Histograms`.
 I created some predefined metrics, but we can expand on them in the future.
 
 ## Installation
 
-To use this library in your faust project just add `faustprometheus` or install it through pip:
+To use this library in your faust project just add `faust-prometheus` or install it through pip:
 
 
-    pip install faustprometheus
+    pip install faust-prometheus
     
 
 ## Usage
