@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='faust-prometheus',
-    version="0.0.6",
+    version="0.0.7",
     author='Stefan Kecskes',
     author_email='mr.kecskes@gmail.com',
     description="Prometheus metrics for Faust stream processing framework",
