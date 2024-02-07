@@ -73,7 +73,8 @@ class PrometheusMonitor(Monitor):
 
     # TODO: for now turn off default python garbage collection metrics.
     #  If needed later, look into implementing them with labels
-    def _python_gc_metrics(self, remove: bool = True):
+    @staticmethod
+    def _python_gc_metrics(remove: bool = True):
         collectors = REGISTRY._names_to_collectors.values()
         for name in list(collectors):
             with suppress(KeyError):
@@ -100,7 +101,8 @@ class PrometheusMonitor(Monitor):
 
         return state
 
-    def _normalize(self, name: str,
+    @staticmethod
+    def _normalize(name: str,
                    *,
                    pattern: typing.Pattern = RE_NORMALIZE,
                    substitution: str = RE_NORMALIZE_SUBSTITUTION) -> str:

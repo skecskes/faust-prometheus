@@ -7,14 +7,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='faustprometheus',
+    name='faust-prometheus',
     version="0.0.6",
-    author='Wood Mackenzie',
+    author='Stefan Kecskes',
     author_email='mr.kecskes@gmail.com',
-    description="WoodMac's Faust Prometheus Library",
+    description="Prometheus metrics for Faust stream processing framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/woodmac/faust-prometheus",
+    url="https://github.com/skecskes/faust-prometheus",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
